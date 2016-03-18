@@ -8,9 +8,11 @@ repositories {
 
 dependencies {
   providedCompile "javax.servlet:servlet-api:2.5"
-  compile "com.github.tozny:sdk-java:master"
+  compile "com.github.tozny:sdk-java:1.0.0"
   compile "com.fasterxml.jackson.core:jackson-databind:2.7.1-1"
+  compile "com.google.guava:guava:19.0"
   compile "org.glassfish.jersey.containers:jersey-container-servlet:2.22.2"
   compile "org.glassfish.jersey.ext:jersey-mvc:2.22.2"
   compile "org.glassfish.jersey.ext:jersey-mvc-mustache:2.22.2"
+  compile "javax.annotation:javax.annotation-api:1.2"
 }

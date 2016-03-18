@@ -29,7 +29,9 @@ public class Application extends ResourceConfig {
     public Application(@Context ServletContext context) throws IOException {
         RealmApi realmApi = getRealmApi(context);
         String contextPath = context.getContextPath();
-        register(new SessionResource(contextPath, realmApi));
+        UserDAO userDAO = new UserDAO();
+
+        register(new UserResource(contextPath, realmApi, userDAO));
     }
 
     private RealmApi getRealmApi(ServletContext context) throws IOException {
