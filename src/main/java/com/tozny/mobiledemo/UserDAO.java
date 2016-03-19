@@ -38,4 +38,18 @@ public class UserDAO {
         return userMap.get(email);
     }
 
+    @Nullable
+    public User findByToznyId(String toznyId) {
+        if (toznyId == null) {
+            return null;
+        }
+        for (User user : userMap.values()) {
+            String userId = user.getToznyId();
+            if (userId != null && userId.equals(toznyId)) {
+                return user;
+            }
+        }
+        return null;
+    }
+
 }

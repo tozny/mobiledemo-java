@@ -20,13 +20,14 @@ import com.tozny.sdk.realm.config.ToznyRealmSecret;
 
 import java.io.IOException;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -46,10 +47,41 @@ public class SessionResource {
 
     private final RealmApi realmApi;
     private final String contextPath;
+    private final SessionDAO sessionDAO;
+    private final UserDAO userDAO;
 
-    public SessionResource(String contextPath, RealmApi realmApi) {
+    public SessionResource(
+            String contextPath,
+            RealmApi realmApi,
+            SessionDAO sessionDAO,
+            UserDAO userDAO) {
         this.realmApi = realmApi;
         this.contextPath = contextPath;
+        this.sessionDAO = sessionDAO;
+        this.userDAO = userDAO;
+    }
+
+    @Nullable
+    public static String getSessionToken(HttpServletRequest req) {
+        String authHeader = req.getHeader("Authorization");
+        if (authHeader != null) {
+            String[] authParts = authHeader.split(" ");
+            return authParts[authParts.length - 1];
+        }
+        else {
+            return null;
+        }
+    }
+
+    @Nullable
+    public static String validToznyId(HttpServletRequest req, SessionDAO sessionDAO) {
+        String sessionToken = getSessionToken(req);
+        if (sessionToken == null) {
+            return null;
+        }
+        else {
+            return sessionDAO.findUserIdBySessionToken(sessionToken);
+        }
     }
 
     /*
@@ -58,13 +90,13 @@ public class SessionResource {
      */
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response createSession(
             @FormParam("signed_data") String signedData,
-            @FormParam("signature")   String signature,
-            @Context HttpServletRequest req
+            @FormParam("signature")   String signature
             ) {
         if (signature == null || signedData == null) {
-            return Response.status(badRequest()).build();
+            return badRequest();
         }
 
         if (realmApi.verifyLogin(signedData, signature)) {
@@ -76,17 +108,24 @@ public class SessionResource {
                 return Response.serverError().entity(e).build();
             }
 
-            HttpSession session = req.getSession();
-            session.setAttribute("userInfo", userInfo);
+            User user = userDAO.findByToznyId(userInfo.user_id);
+            if (user == null) {
+                return notAuthorized();
+            }
+
+            Session appSession = new Session();
+            sessionDAO.insertSession(userInfo.user_id, appSession);
+
             return Response
                 .created(
                         UriBuilder
                         .fromPath(contextPath)
                         .path(getClass())
                         .build())
+                .entity(appSession)
                 .build();
         } else {
-            return Response.noContent().build();
+            return notAuthorized();
         }
     }
 
@@ -96,13 +135,14 @@ public class SessionResource {
      */
     @DELETE
     public Response destroySession(@Context HttpServletRequest req) {
-        HttpSession session = req.getSession(false);
-
-        if (session != null) {
-            session.invalidate();
+        String sessionToken = getSessionToken(req);
+        if (sessionToken == null) {
+            return notAuthorized();
         }
-
-        return Response.noContent().build();
+        else {
+            sessionDAO.deleteSession(sessionToken);
+            return Response.noContent().build();
+        }
     }
 
     private <T> T parseSignedData(String signedData, Class<T> klass) throws IOException {
@@ -111,15 +151,16 @@ public class SessionResource {
         return mapper.readValue(json, klass);
     }
 
-    private Response.StatusType badRequest() {
-        return new Response.StatusType() {
-            public Response.Status.Family getFamily() {
-                return Response.Status.Family.CLIENT_ERROR;
-            }
-            public String getReasonPhrase() { return "400 Bad Request"; }
-            public int getStatusCode() { return 400; }
-        };
+    private Response notAuthorized() {
+        return Response
+            .status(Response.Status.UNAUTHORIZED)
+            .build();
+    }
+
+    private Response badRequest() {
+        return Response
+            .status(Response.Status.BAD_REQUEST)
+            .build();
     }
 
 }
-

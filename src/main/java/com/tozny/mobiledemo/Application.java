@@ -30,7 +30,9 @@ public class Application extends ResourceConfig {
         RealmApi realmApi = getRealmApi(context);
         String contextPath = context.getContextPath();
         UserDAO userDAO = new UserDAO();
+        SessionDAO sessionDAO = new SessionDAO();
 
+        register(new SessionResource(contextPath, realmApi, sessionDAO, userDAO));
         register(new UserResource(contextPath, realmApi, userDAO));
     }
 
