@@ -8,7 +8,7 @@
  * for more information.
  */
 
-package com.tozny.sdk.example.demo;
+package com.tozny.mobiledemo;
 
 import com.google.common.collect.ImmutableList;
 

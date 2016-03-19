@@ -8,7 +8,7 @@
  * for more information.
  */
 
-package com.tozny.sdk.example.demo;
+package com.tozny.mobiledemo;
 
 import com.google.api.client.util.Base64;
 import com.fasterxml.jackson.databind.ObjectMapper;

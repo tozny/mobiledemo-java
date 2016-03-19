@@ -8,7 +8,7 @@
  * for more information.
  */
 
-package com.tozny.sdk.example.demo;
+package com.tozny.mobiledemo;
 
 import com.tozny.sdk.RealmApi;
 import com.tozny.sdk.realm.RealmConfig;

@@ -8,7 +8,7 @@
  * for more information.
  */
 
-package com.tozny.sdk.example.demo;
+package com.tozny.mobiledemo;
 
 // TODO
 public class Device {}
