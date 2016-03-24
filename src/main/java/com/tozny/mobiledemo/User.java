@@ -13,11 +13,12 @@ package com.tozny.mobiledemo;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
+import java.security.Principal;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
-public class User {
+public class User implements Principal {
 
     private final String email;
     private final String toznyId;
@@ -37,6 +38,8 @@ public class User {
         return new User(email, toznyId, devices);
     }
 
+    public String getName() { return email; }
+
     @Override
     public int hashCode() {
         return Objects.hashCode(email, devices);
@@ -52,6 +55,11 @@ public class User {
         else {
             return false;
         }
+    }
+
+    @Override
+    public String toString() {
+        return email;
     }
 
 }

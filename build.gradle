@@ -16,3 +16,7 @@ dependencies {
   compile "org.glassfish.jersey.ext:jersey-mvc-mustache:2.22.2"
   compile "javax.annotation:javax.annotation-api:1.2"
 }
+
+tasks.withType(JavaCompile) {
+  options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+}

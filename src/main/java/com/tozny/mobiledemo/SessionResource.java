@@ -15,8 +15,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.tozny.sdk.RealmApi;
 import com.tozny.sdk.realm.RealmConfig;
-import com.tozny.sdk.realm.config.ToznyRealmKeyId;
-import com.tozny.sdk.realm.config.ToznyRealmSecret;
 
 import java.io.IOException;
 
@@ -59,29 +57,6 @@ public class SessionResource {
         this.contextPath = contextPath;
         this.sessionDAO = sessionDAO;
         this.userDAO = userDAO;
-    }
-
-    @Nullable
-    public static String getSessionToken(HttpServletRequest req) {
-        String authHeader = req.getHeader("Authorization");
-        if (authHeader != null) {
-            String[] authParts = authHeader.split(" ");
-            return authParts[authParts.length - 1];
-        }
-        else {
-            return null;
-        }
-    }
-
-    @Nullable
-    public static String validToznyId(HttpServletRequest req, SessionDAO sessionDAO) {
-        String sessionToken = getSessionToken(req);
-        if (sessionToken == null) {
-            return null;
-        }
-        else {
-            return sessionDAO.findUserIdBySessionToken(sessionToken);
-        }
     }
 
     /*
@@ -161,6 +136,14 @@ public class SessionResource {
         return Response
             .status(Response.Status.BAD_REQUEST)
             .build();
+    }
+
+    @Nullable
+    private String getSessionToken(HttpServletRequest req) {
+        String authorization = req.getHeader("Authorization");
+        String accessToken = authorization != null ?
+            authorization.replaceFirst("Bearer ", "") : "";
+        return accessToken.length() > 0 ? accessToken : null;
     }
 
 }
