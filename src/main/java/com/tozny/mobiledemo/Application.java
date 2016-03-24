@@ -22,6 +22,7 @@ import java.util.Properties;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 public class Application extends ResourceConfig {
@@ -32,6 +33,7 @@ public class Application extends ResourceConfig {
         UserDAO userDAO = new UserDAO();
         SessionDAO sessionDAO = new SessionDAO();
 
+        register(JacksonFeature.class);
         register(new AuthenticationFilter(sessionDAO, userDAO));
         register(new ProtectedResource());
         register(new SessionResource(contextPath, realmApi, sessionDAO, userDAO));
