@@ -14,9 +14,12 @@ import com.google.api.client.util.Base64;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.tozny.sdk.RealmApi;
+import com.tozny.sdk.ToznyApiException;
 import com.tozny.sdk.realm.RealmConfig;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
@@ -83,7 +86,7 @@ public class SessionResource {
                 return Response.serverError().entity(e).build();
             }
 
-            User user = userDAO.findByToznyId(userInfo.user_id);
+            User user = findOrImportUser(userInfo);
             if (user == null) {
                 return notAuthorized();
             }
@@ -118,6 +121,27 @@ public class SessionResource {
             sessionDAO.deleteSession(sessionToken);
             return Response.noContent().build();
         }
+    }
+
+    @Nullable
+    private User findOrImportUser(UserInfo userInfo) {
+        User localUser = userDAO.findByToznyId(userInfo.user_id);
+        if (localUser != null) {
+            return localUser;
+        }
+
+        com.tozny.sdk.realm.User toznyUser;
+        try {
+            toznyUser = realmApi.userGet(userInfo.user_id);
+        }
+        catch (ToznyApiException e) {
+            return null;
+        }
+
+        List<Device> devices = Collections.<Device>emptyList();
+        User user = new User(toznyUser.tozny_email, toznyUser.user_id, devices);
+        userDAO.insertUser(user);
+        return user;
     }
 
     private <T> T parseSignedData(String signedData, Class<T> klass) throws IOException {
