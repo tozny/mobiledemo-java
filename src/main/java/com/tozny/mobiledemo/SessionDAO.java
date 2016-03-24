@@ -32,10 +32,10 @@ public class SessionDAO {
     }
 
     public void insertSession(String userId, Session session) {
-        ImmutableMap.Builder builder = ImmutableMap.builder();
-        builder.putAll(sessionMap);
-        builder.put(userId, session);
-        sessionMap = builder.build();
+        sessionMap = new ImmutableMap.Builder<String,Session>()
+            .putAll(sessionMap)
+            .put(userId, session)
+            .build();
     }
 
     @Nullable

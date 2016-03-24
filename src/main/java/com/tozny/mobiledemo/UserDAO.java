@@ -10,6 +10,8 @@
 
 package com.tozny.mobiledemo;
 
+import com.google.common.collect.ImmutableMap;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,17 +22,17 @@ import javax.annotation.Nullable;
  */
 public class UserDAO {
 
-    private final Map<String,User> userMap;
+    private ImmutableMap<String,User> userMap;
 
-    public UserDAO(Map<String,User> userMap) {
-        this.userMap = userMap;
-    }
     public UserDAO() {
-        this(new HashMap());
+        userMap = ImmutableMap.of();
     }
 
     public void insertUser(User user) {
-        userMap.put(user.getEmail(), user);
+        userMap = new ImmutableMap.Builder<String,User>()
+            .putAll(userMap)
+            .put(user.getEmail(), user)
+            .build();
     }
 
     @Nullable
