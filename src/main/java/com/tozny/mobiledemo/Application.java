@@ -32,6 +32,7 @@ public class Application extends ResourceConfig {
         UserDAO userDAO = new UserDAO();
         SessionDAO sessionDAO = new SessionDAO();
 
+        register(new AuthenticationFilter(sessionDAO, userDAO));
         register(new ProtectedResource());
         register(new SessionResource(contextPath, realmApi, sessionDAO, userDAO));
         register(new UserResource(contextPath, realmApi, userDAO));
