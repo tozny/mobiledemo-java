@@ -10,11 +10,11 @@
 
 package com.tozny.mobiledemo;
 
-import com.google.api.client.util.Base64;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.tozny.sdk.RealmApi;
 import com.tozny.sdk.ToznyApiException;
+import com.tozny.sdk.internal.ProtocolHelpers;
 import com.tozny.sdk.realm.RealmConfig;
 
 import java.io.IOException;
@@ -139,13 +139,13 @@ public class SessionResource {
         }
 
         List<Device> devices = Collections.<Device>emptyList();
-        User user = new User(toznyUser.tozny_email, toznyUser.user_id, devices);
+        User user = new User(toznyUser.getToznyEmail(), toznyUser.getUserId(), devices);
         userDAO.insertUser(user);
         return user;
     }
 
     private <T> T parseSignedData(String signedData, Class<T> klass) throws IOException {
-        String json = new String(Base64.decodeBase64(signedData));
+        String json = new String(ProtocolHelpers.base64UrlDecode(signedData));
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(json, klass);
     }

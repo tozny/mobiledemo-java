@@ -75,7 +75,7 @@ public final class UserResource {
         }
 
         List<Device> devices = ImmutableList.of();
-        return new User(email, toznyUser.user_id, devices);
+        return new User(email, toznyUser.getUserId(), devices);
     }
 
     private com.tozny.sdk.realm.User getToznyUser(final String email) throws ToznyApiException {
