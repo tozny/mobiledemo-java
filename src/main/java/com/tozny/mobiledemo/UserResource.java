@@ -14,9 +14,15 @@ import com.google.common.collect.ImmutableList;
 
 import com.tozny.sdk.RealmApi;
 import com.tozny.sdk.ToznyApiException;
+import com.tozny.sdk.realm.methods.user_add.UserAddResponse;
+import com.tozny.sdk.realm.methods.user_device_add.UserDeviceAddResponse;
+
+import de.scravy.pair.Pair;
+import de.scravy.pair.Pairs;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.GET;
@@ -40,56 +46,61 @@ public final class UserResource {
     @Path("{email}/devices")
     @POST
     public Response addDevice(@PathParam("email") String email) {
-        User user = getUser(email);
-
-        // Device device = realmApi.userAddDevice(toznyUser);
-        if (user == null) {
-            return Response
-                .status(Response.Status.NOT_IMPLEMENTED)
-                .entity("Adding a user to the Tozny realm is not implemented yet.")
-                .build();
+        Pair<String,String> p;
+        try {
+            p = getEnrollmentUrlandQrUrl(email);
+        }
+        catch (ToznyApiException e) {
+            return Response.serverError().entity(e).build();
         }
 
-        return Response
-            .status(Response.Status.NOT_IMPLEMENTED)
-            .entity("Adding a device via the Java SDK is not implemented yet.")
-            .build();
+        String secretEnrollmentUrl = p.getFirst();
+        String secretEnrollmentQrUrl = p.getSecond();
+
+        System.out.println("###################################################################################");
+        System.out.println("The next step is to send an email to "+ email +" with this secret enrollment URL:");
+        System.out.println("");
+        System.out.println("    "+ secretEnrollmentUrl);
+        System.out.println("");
+        System.out.println("The user can activate that URL on a mobile device to finalize registration of that device.");
+        System.out.println("###################################################################################");
+
+        return Response.ok().entity("See server console output for next step.").build();
     }
 
-    private User getUser(String email) throws ToznyApiException {
-        final User user = userDAO.findByEmail(email);
-        if (user == null) {
-            return addUser(email);
+    private Pair<String,String> getEnrollmentUrlandQrUrl(String email) throws ToznyApiException {
+        final com.tozny.sdk.realm.User toznyUser = getToznyUser(email);
+        if (toznyUser != null) {
+            return addDevice(toznyUser);
         }
         else {
-            return user;
+            return enrollUser(email);
         }
     }
 
-    private User addUser(final String email) throws ToznyApiException {
-        final com.tozny.sdk.realm.User toznyUser = getToznyUser(email);
-
-        // TODO
-        if (toznyUser == null) {
-            return null;
-        }
-
+    private Pair<String,String> enrollUser(String email) throws ToznyApiException {
+        UserAddResponse resp = realmApi.userAddWithEmail(false, email);
         List<Device> devices = ImmutableList.of();
-        return new User(email, toznyUser.getUserId(), devices);
+
+        User localUser = new User(email, resp.getUserId(), devices);
+        userDAO.insertUser(localUser);
+
+        return Pairs.from(resp.getSecretEnrollmentUrl(), resp.getSecretEnrollmentQrUrl());
     }
 
+    private Pair<String,String> addDevice(com.tozny.sdk.realm.User toznyUser) throws ToznyApiException {
+        UserDeviceAddResponse resp = realmApi.userDeviceAdd(toznyUser.getUserId());
+        return Pairs.from(resp.getSecretEnrollmentUrl(), resp.getSecretEnrollmentQrUrl());
+    }
+
+    @Nullable
     private com.tozny.sdk.realm.User getToznyUser(final String email) throws ToznyApiException {
         if (realmApi.userExistsByEmail(email)) {
             return realmApi.userGetByEmail(email);
         }
         else {
-            // TODO
             return null;
         }
-    }
-
-    private UriBuilder base() {
-        return UriBuilder.fromPath(contextPath);
     }
 
 }
