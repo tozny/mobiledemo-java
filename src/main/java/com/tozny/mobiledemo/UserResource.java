@@ -37,11 +37,13 @@ public final class UserResource {
 
     private final String contextPath;
     private final RealmApi realmApi;
+    private final String realmKeyId;
     private final UserDAO userDAO;
 
-    public UserResource(String contextPath, RealmApi realmApi, UserDAO userDAO) {
+    public UserResource(String contextPath, RealmApi realmApi, String realmKeyId, UserDAO userDAO) {
         this.contextPath = contextPath;
         this.realmApi = realmApi;
+        this.realmKeyId = realmKeyId;
         this.userDAO = userDAO;
     }
 
@@ -119,7 +121,8 @@ public final class UserResource {
     private String buildEnrollmentUrl(String tempKey) {
         try {
             String encodedTempKey = URLEncoder.encode(tempKey, "UTF-8");
-            return "tozdemo://api.tozny.com/tozadd/?k=" + encodedTempKey;
+            String encodedRealmKeyId = URLEncoder.encode(realmKeyId);
+            return "tozdemo://api.tozny.com/tozadd/?k=" + encodedTempKey + "&r=" + encodedRealmKeyId;
         }
         catch (UnsupportedEncodingException e) {
             // We should never get here - assume that the runtime environment
