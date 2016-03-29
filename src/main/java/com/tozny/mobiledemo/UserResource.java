@@ -17,9 +17,9 @@ import com.tozny.sdk.ToznyApiException;
 import com.tozny.sdk.realm.methods.user_add.UserAddResponse;
 import com.tozny.sdk.realm.methods.user_device_add.UserDeviceAddResponse;
 
-import de.scravy.pair.Pair;
-import de.scravy.pair.Pairs;
-
+import java.io.UnsupportedEncodingException;
+import java.lang.RuntimeException;
+import java.net.URLEncoder;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -49,16 +49,15 @@ public final class UserResource {
     @Produces(MediaType.TEXT_PLAIN)
     @POST
     public Response addDevice(@PathParam("email") String email) {
-        Pair<String,String> p;
+        String tempKey;
         try {
-            p = getEnrollmentUrlandQrUrl(email);
+            tempKey = getUserTempKey(email);
         }
         catch (ToznyApiException e) {
             return Response.serverError().entity(e.getMessage()).build();
         }
 
-        String secretEnrollmentUrl = p.getFirst();
-        String secretEnrollmentQrUrl = p.getSecond();
+        String secretEnrollmentUrl = buildEnrollmentUrl(tempKey);
 
         System.out.println("###################################################################################");
         System.out.println("");
@@ -68,16 +67,12 @@ public final class UserResource {
         System.out.println("");
         System.out.println("The user can activate that URL on a mobile device to finalize registration of that device.");
         System.out.println("");
-        System.out.println("Alternatively, scan this QR code:");
-        System.out.println("");
-        System.out.println("    "+ secretEnrollmentQrUrl);
-        System.out.println("");
         System.out.println("###################################################################################");
 
         return Response.ok().entity("See server console output for next step.").build();
     }
 
-    private Pair<String,String> getEnrollmentUrlandQrUrl(String email) throws ToznyApiException {
+    private String getUserTempKey(String email) throws ToznyApiException {
         final com.tozny.sdk.realm.User toznyUser = getToznyUser(email);
         if (toznyUser != null) {
             return addDevice(toznyUser);
@@ -87,19 +82,28 @@ public final class UserResource {
         }
     }
 
-    private Pair<String,String> enrollUser(String email) throws ToznyApiException {
+    /**
+     * Register a new user record with Tozny. Returns a temporary key that the
+     * user can use in a mobile app to complete registration.
+     */
+    private String enrollUser(String email) throws ToznyApiException {
         UserAddResponse resp = realmApi.userAddWithEmail(true, email);
         List<Device> devices = ImmutableList.of();
 
         User localUser = new User(email, resp.getUserId(), devices);
         userDAO.insertUser(localUser);
 
-        return Pairs.from(resp.getSecretEnrollmentUrl(), resp.getSecretEnrollmentQrUrl());
+        return resp.getUserTempKey();
     }
 
-    private Pair<String,String> addDevice(com.tozny.sdk.realm.User toznyUser) throws ToznyApiException {
+    /**
+     * Add a new authentication device to an existing Tozny user record. Returns
+     * a temporary key that the user can use in a mobile app to complete
+     * device registration.
+     */
+    private String addDevice(com.tozny.sdk.realm.User toznyUser) throws ToznyApiException {
         UserDeviceAddResponse resp = realmApi.userDeviceAdd(toznyUser.getUserId());
-        return Pairs.from(resp.getSecretEnrollmentUrl(), resp.getSecretEnrollmentQrUrl());
+        return resp.getTempKey();
     }
 
     @Nullable
@@ -109,6 +113,18 @@ public final class UserResource {
         }
         else {
             return null;
+        }
+    }
+
+    private String buildEnrollmentUrl(String tempKey) {
+        try {
+            String encodedTempKey = URLEncoder.encode(tempKey, "UTF-8");
+            return "tozdemo://api.tozny.com/tozadd/?k=" + encodedTempKey;
+        }
+        catch (UnsupportedEncodingException e) {
+            // We should never get here - assume that the runtime environment
+            // can encode UTF-8.
+            throw new RuntimeException(e);
         }
     }
 

@@ -11,7 +11,6 @@ dependencies {
   compile "com.github.tozny:sdk-java:2.1.1"
   compile "com.fasterxml.jackson.core:jackson-databind:2.7.1-1"
   compile "com.google.guava:guava:19.0"
-  compile "de.scravy:pair:1.1.0"
   compile "org.glassfish.jersey.containers:jersey-container-servlet:2.22.2"
   compile "org.glassfish.jersey.media:jersey-media-json-jackson:2.22.2"
   compile "javax.annotation:javax.annotation-api:1.2"
