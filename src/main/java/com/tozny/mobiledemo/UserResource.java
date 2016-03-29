@@ -27,6 +27,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
@@ -44,6 +46,7 @@ public final class UserResource {
     }
 
     @Path("{email}/devices")
+    @Produces(MediaType.TEXT_PLAIN)
     @POST
     public Response addDevice(@PathParam("email") String email) {
         Pair<String,String> p;
@@ -51,7 +54,7 @@ public final class UserResource {
             p = getEnrollmentUrlandQrUrl(email);
         }
         catch (ToznyApiException e) {
-            return Response.serverError().entity(e).build();
+            return Response.serverError().entity(e.getMessage()).build();
         }
 
         String secretEnrollmentUrl = p.getFirst();
