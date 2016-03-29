@@ -61,11 +61,17 @@ public final class UserResource {
         String secretEnrollmentQrUrl = p.getSecond();
 
         System.out.println("###################################################################################");
+        System.out.println("");
         System.out.println("The next step is to send an email to "+ email +" with this secret enrollment URL:");
         System.out.println("");
         System.out.println("    "+ secretEnrollmentUrl);
         System.out.println("");
         System.out.println("The user can activate that URL on a mobile device to finalize registration of that device.");
+        System.out.println("");
+        System.out.println("Alternatively, scan this QR code:");
+        System.out.println("");
+        System.out.println("    "+ secretEnrollmentQrUrl);
+        System.out.println("");
         System.out.println("###################################################################################");
 
         return Response.ok().entity("See server console output for next step.").build();
