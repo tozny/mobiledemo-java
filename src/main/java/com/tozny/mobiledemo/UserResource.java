@@ -82,7 +82,7 @@ public final class UserResource {
     }
 
     private Pair<String,String> enrollUser(String email) throws ToznyApiException {
-        UserAddResponse resp = realmApi.userAddWithEmail(false, email);
+        UserAddResponse resp = realmApi.userAddWithEmail(true, email);
         List<Device> devices = ImmutableList.of();
 
         User localUser = new User(email, resp.getUserId(), devices);
