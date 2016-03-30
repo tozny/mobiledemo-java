@@ -95,7 +95,7 @@ public final class UserResource {
         User localUser = new User(email, resp.getUserId(), devices);
         userDAO.insertUser(localUser);
 
-        return resp.getUserTempKey();
+        return resp.getTempKey();
     }
 
     /**
